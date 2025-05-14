@@ -1,10 +1,12 @@
-import { useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useEffect, useState } from "react";
 import Lights from "./Lights";
 import Platform from "./Platform";
 import Player from "./Player";
 import Rock from "./Rock";
+import useScoreStore from "../../stores/game";
+import usePlayerStore from "../../stores/player";
+import fetchApi from "../../utils/fetchApi";
 
 interface RockData {
   id: number;
@@ -12,76 +14,15 @@ interface RockData {
 }
 
 export default function SceneContent() {
-  const [playerPos, setPlayerPos] = useState<{ x: number; z: number }>({
-    x: 0,
-    z: 0,
-  });
-  const [playerVelocity, setPlayerVelocity] = useState<{
-    x: number;
-    z: number;
-  }>({
-    x: 0,
-    z: 0,
-  });
+  const score = useScoreStore((state) => state.score);
+  const setScore = useScoreStore((state) => state.setScore);
+  const gameOver = useScoreStore((state) => state.gameOver);
+  const setGameOver = useScoreStore((state) => state.setGameOver);
   const [rocks, setRocks] = useState<RockData[]>([]);
-  const [isGameOver, setIsGameOver] = useState(false);
-
-  const platformRadius = 5;
-  const speed = 0.03;
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isGameOver) return;
-      switch (e.code) {
-        case "ArrowLeft":
-          setPlayerVelocity((v) => ({ ...v, x: -speed * 10 }));
-          break;
-        case "ArrowRight":
-          setPlayerVelocity((v) => ({ ...v, x: speed * 10 }));
-          break;
-        case "ArrowUp":
-          setPlayerVelocity((v) => ({ ...v, z: -speed * 10 }));
-          break;
-        case "ArrowDown":
-          setPlayerVelocity((v) => ({ ...v, z: speed * 10 }));
-          break;
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      switch (e.code) {
-        case "ArrowLeft":
-        case "ArrowRight":
-          setPlayerVelocity((v) => ({ ...v, x: 0 }));
-          break;
-        case "ArrowUp":
-        case "ArrowDown":
-          setPlayerVelocity((v) => ({ ...v, z: 0 }));
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [isGameOver]);
-
-  useFrame(() => {
-    if (isGameOver) return;
-    const newX = playerPos.x + playerVelocity.x;
-    const newZ = playerPos.z + playerVelocity.z;
-    const distance = Math.sqrt(newX ** 2 + newZ ** 2);
-    if (distance < platformRadius - 0.5) {
-      setPlayerPos({ x: newX, z: newZ });
-    }
-  });
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (isGameOver) return;
+      if (gameOver) return;
       const x = (Math.random() - 0.5) * 5;
       const z = (Math.random() - 0.5) * 5;
       const y = 8;
@@ -91,17 +32,34 @@ export default function SceneContent() {
       ]);
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [isGameOver]);
+    const reloadGame = (e: KeyboardEvent) => {
+      if (e.key === "r" && gameOver) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener("keydown", reloadGame);
 
-  const handleHit = () => {
-    if (isGameOver) return;
-    setIsGameOver(true);
-    alert("Game Over! Reload to play again.");
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("keydown", reloadGame);
+    };
+  }, [gameOver]);
+
+  const handleHit = (id: number) => {
+    setScore(score + 1);
+    setRocks((rocks) => rocks.filter((r) => r.id !== id));
   };
 
   const handleMiss = (id: number) => {
     setRocks((rocks) => rocks.filter((r) => r.id !== id));
+    setGameOver(true);
+
+    fetchApi("scores", {
+      method: "POST",
+      body: JSON.stringify({
+        score: score.toString(),
+      }),
+    });
   };
 
   return (
@@ -113,12 +71,12 @@ export default function SceneContent() {
       />
       <Lights />
       <Platform />
-      <Player position={playerPos} />
+      <Player />
       {rocks.map((rock) => (
         <Rock
           key={rock.id}
           position={rock.position}
-          onHitPlayer={handleHit}
+          onHitPlayer={() => handleHit(rock.id)}
           onMiss={() => handleMiss(rock.id)}
         />
       ))}

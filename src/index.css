@@ -1,3 +1,99 @@
 body {
   overflow: hidden;
+  background-color: black;
+}
+
+.score {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  color: white;
+  font-size: 100px;
+}
+
+.game-over {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+}
+
+.game-over h1 {
+  font-size: 100px;
+}
+
+.leaderboard {
+  position: absolute;
+  top: 48px;
+  right: 24px;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: left;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  padding-right: 24px;
+}
+
+.menu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.menu button {
+  background-color: #5c5c5c;
+  color: white;
+  border: none;
+  padding: 20px;
+  font-size: 30px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.menu button:hover {
+  background-color: #666;
+}
+
+.group {
+  display: flex;
+  gap: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 400px;
+}
+input {
+  padding: 10px;
+  font-size: 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #5c5c5c;
+}
+
+button {
+  background-color: #5c5c5c;
+  color: white;
+  border: none;
+  padding: 20px;
+  font-size: 30px;
+  cursor: pointer;
+  border-radius: 8px;
 }
